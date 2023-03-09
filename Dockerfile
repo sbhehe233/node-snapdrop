@@ -1,5 +1,6 @@
 FROM node:lts-alpine
-
+ARG PORT=80
+ENV PORT=$PORT
 WORKDIR /home/node/app
 
 COPY package*.json ./
@@ -7,7 +8,5 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-
-EXPOSE 3000
 
 CMD ["node", "index.js"]
