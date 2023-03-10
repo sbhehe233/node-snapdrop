@@ -1,4 +1,9 @@
-var process = require('process')
+const process = require('process')
+const express = require('express');
+const RateLimit = require('express-rate-limit');
+const http = require('http');
+const basicAuth = require('express-basic-auth')
+
 // Handle SIGINT
 process.on('SIGINT', () => {
   console.info("SIGINT Received, exiting...")
@@ -25,10 +30,6 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log(reason)
 })
 
-const express = require('express');
-const RateLimit = require('express-rate-limit');
-const http = require('http');
-
 const limiter = RateLimit({
 	windowMs: 5 * 60 * 1000, // 5 minutes
 	max: 100, // Limit each IP to 100 requests per `window` (here, per 5 minutes)
@@ -39,7 +40,12 @@ const limiter = RateLimit({
 
 const app = express();
 const port = process.env.PORT || 3000;
-const publicRun = process.argv[2];
+
+app.use(basicAuth({
+    users: { 'sb': process.env.sb233password},
+    challenge: true,
+    realm: 'Imb4T3st4pp',
+}))
 
 app.use(limiter);
 
@@ -58,12 +64,7 @@ app.get('/', (req, res) => {
 });
 
 const server = http.createServer(app);
-
-if (publicRun == 'public') {
-    server.listen(port);
-} else {
-    server.listen(port, '127.0.0.1');
-}
+server.listen(port);
 
 const parser = require('ua-parser-js');
 const { uniqueNamesGenerator, animals, colors } = require('unique-names-generator');
@@ -103,7 +104,7 @@ class SnapdropServer {
     }
 
     _onMessage(sender, message) {
-        // Try to parse message 
+        // Try to parse message
         try {
             message = JSON.parse(message);
         } catch (e) {
@@ -227,7 +228,7 @@ class Peer {
         this._setPeerId(request)
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
-        // set name 
+        // set name
         this._setName(request);
         // for keepalive
         this.timerId = 0;
@@ -263,11 +264,11 @@ class Peer {
 
 
         let deviceName = '';
-        
+
         if (ua.os && ua.os.name) {
             deviceName = ua.os.name.replace('Mac OS', 'Mac') + ' ';
         }
-        
+
         if (ua.device.model) {
             deviceName += ua.device.model;
         } else {
